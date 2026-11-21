@@ -38,5 +38,5 @@ pytest-asyncio>=0.24.0
 pytest-cov>=6.0.0
 httpx>=0.28.0
 factory-boy>=3.3.0
-faker>=30.0.0
+faker>=40.54.0
 locust>=2.32.0
