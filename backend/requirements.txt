@@ -12,7 +12,7 @@ asyncpg>=0.30.0
 alembic>=1.14.0
 
 # Computer Vision & Numerical Computing
-opencv-python-headless>=4.10.0.84,<5.0.0
+opencv-python-headless>=5.1.0.95,<6.0.0
 Pillow>=10.0.0
 numpy>=1.26.0
 scipy>=1.14.0
