@@ -13,7 +13,7 @@ alembic>=1.14.0
 redis[hiredis]>=5.2.0
 
 # HTTP client
-httpx>=0.28.0
+httpx>=0.28.1
 
 # LLM
 google-genai>=1.0.0
@@ -36,7 +36,7 @@ prometheus-client>=0.21.0
 pytest>=8.3.0
 pytest-asyncio>=0.24.0
 pytest-cov>=6.0.0
-httpx>=0.28.0
+httpx>=0.28.1
 factory-boy>=3.3.0
 faker>=30.0.0
 locust>=2.32.0
