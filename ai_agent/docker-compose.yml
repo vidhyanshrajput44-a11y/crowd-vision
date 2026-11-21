@@ -1,0 +1,84 @@
+version: '3.8'
+
+services:
+  # ── PostgreSQL Database ──────────────────────────────────────
+  postgres:
+    image: postgres:16-alpine
+    container_name: crowdvision_postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-crowdvision}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-crowdvision}
+      POSTGRES_DB: ${POSTGRES_DB:-crowdvision_agent}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U crowdvision -d crowdvision_agent"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - crowdvision_net
+
+  # ── Redis Cache & Pub/Sub ────────────────────────────────────
+  redis:
+    image: redis:7-alpine
+    container_name: crowdvision_redis
+    restart: unless-stopped
+    command: redis-server --save 60 1 --loglevel warning
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - crowdvision_net
+
+  # ── CrowdVision AI Agent Service ─────────────────────────────
+  agent:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: crowdvision_agent
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    environment:
+      - APP_ENV=production
+      - APP_HOST=0.0.0.0
+      - APP_PORT=8100
+      - APP_WORKERS=2
+      - DATABASE_URL=postgresql+asyncpg://crowdvision:crowdvision@postgres:5432/crowdvision_agent
+      - REDIS_URL=redis://redis:6379/0
+      - API_SECRET_KEY=${API_SECRET_KEY:-CHANGE_ME_TO_A_RANDOM_SECRET_KEY}
+      - GEMINI_API_KEY=${GEMINI_API_KEY:-}
+      - GEMINI_MODEL=${GEMINI_MODEL:-gemini-2.5-flash}
+      - LLM_ENABLED=${LLM_ENABLED:-true}
+    ports:
+      - "8100:8100"
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8100/health || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+    networks:
+      - crowdvision_net
+
+volumes:
+  postgres_data:
+    driver: local
+  redis_data:
+    driver: local
+
+networks:
+  crowdvision_net:
+    driver: bridge

@@ -1,0 +1,125 @@
+# ──── Python & Bytecode ────
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+.venv/
+ENV/
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# ──── Testing & Caches ────
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+.nox/
+nosetests.xml
+coverage.xml
+*.cover
+*.pyre/
+
+# ──── Environment & Secrets ────
+.env
+.env.local
+.env.*.local
+*.pem
+*.key
+*.cert
+*.crt
+
+# ──── SQLite & Local Databases ────
+*.db
+*.sqlite
+*.sqlite3
+crowdvision_agent.db
+backend/crowdvision_main.db
+# Preserve pre-seeded Railway demo database for GitHub & production deployment
+!/crowdvision_main.db
+
+# ──── Media, Uploads & User Footage ────
+backend/uploads/videos/*
+!backend/uploads/videos/.gitkeep
+# Preserve Railway CCTV analysis demonstration video
+!backend/uploads/videos/cctvfootagerailway.mp4
+backend/uploads/images/*
+!backend/uploads/images/.gitkeep
+backend/uploads/floorplans/*
+!backend/uploads/floorplans/.gitkeep
+backend/uploads/processed/*
+!backend/uploads/processed/.gitkeep
+# Preserve precomputed Railway telemetry cache (<50KB)
+!backend/uploads/processed/railway_demo_telemetry.json
+# *.mp4
+*.avi
+*.mov
+*.mkv
+*.webm
+# Whitelist ground-truth Railway CCTV video (14.9 MB <= 100MB Git limit)
+!cctvfootagerailway.mp4
+
+# ──── Model Artifacts & Weights ────
+*.pt
+*.pth
+*.onnx
+*.bin
+models/*.onnx
+models/*.pt
+backend/models/*.onnx
+backend/models/*.pt
+!backend/models/.gitkeep
+
+# ──── Node & Frontend ────
+frontend/node_modules/
+frontend/dist/
+frontend/.vite/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# ──── IDE & OS Specific ────
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# ──── Scratch & Temporary Disassembly Files ────
+scratch_*
+package-lock.json
+backend/scripts/pyc_dumps/
+backend/scripts/*_disasm.txt
+backend/scripts/schemas_extracted.txt
+backend/scripts/classes_out.txt
+backend/scripts/parse_*.py
+backend/scripts/dump_*.py
+backend/scripts/inspect_*.py
+backend/scripts/extract_*.py
+backend/scripts/check_*.py
+backend/scripts/clean_*.py
+backend/scripts/fix_*.py
+backend/scripts/show_*.py
+backend/scripts/update_*.py
+backend/scripts/debug_*.py
+backend/scripts/print_*.py
+backend/scripts/decompile_*.py

@@ -1,0 +1,89 @@
+name: CrowdVision CI & Security Suite
+
+on:
+  push:
+    branches: [ "main", "master", "develop" ]
+  pull_request:
+    branches: [ "main", "master" ]
+
+jobs:
+  backend-tests:
+    name: Backend Pytest & Security Audit
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: "pip"
+
+      - name: Install System Dependencies (OpenCV Libs)
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libgl1-mesa-glx libglib2.0-0
+
+      - name: Install Python Dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r backend/requirements.txt
+          pip install pytest pytest-asyncio httpx
+
+      - name: Run Backend & Security Tests
+        env:
+          PYTEST_DISABLE_PLUGIN_AUTOLOAD: "1"
+          PYTHONPATH: "backend"
+          SECRET_KEY: "ci_testing_secret_key_change_in_production"
+        run: |
+          python -m pytest -p pytest_asyncio.plugin backend/tests/ -v
+
+  ai-agent-tests:
+    name: AI Agent Pytest & Resilience Tests
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: "pip"
+
+      - name: Install AI Agent Dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r ai_agent/requirements.txt
+          pip install pytest pytest-asyncio httpx
+
+      - name: Run AI Agent Unit, Integration & Benchmark Tests
+        env:
+          PYTEST_DISABLE_PLUGIN_AUTOLOAD: "1"
+          PYTHONPATH: "ai_agent"
+          MOCK_LLM_RESPONSES: "true"
+        run: |
+          python -m pytest -p pytest_asyncio.plugin ai_agent/tests/ -v
+
+  frontend-build:
+    name: Frontend Typecheck & Build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install Dependencies
+        working-directory: frontend
+        run: npm ci
+
+      - name: Verify TypeScript & Build
+        working-directory: frontend
+        run: npm run build

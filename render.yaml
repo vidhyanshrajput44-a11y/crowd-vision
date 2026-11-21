@@ -1,0 +1,30 @@
+# Render Blueprint Specification for CROWD VISION Platform
+# Deploy directly from Render Dashboard -> Blueprints -> Connect Repository
+version: "1"
+
+services:
+  # Primary Unified Full-Stack Web Service (FastAPI + React SPA + OpenCV CV Pipeline)
+  - type: web
+    name: crowdvision
+    runtime: docker
+    plan: starter
+    region: oregon
+    dockerfilePath: ./Dockerfile
+    healthCheckPath: /api/health
+    envVars:
+      - key: APP_ENV
+        value: production
+      - key: APP_LOG_LEVEL
+        value: INFO
+      - key: JWT_SECRET_KEY
+        generateValue: true
+      - key: LLM_PROVIDER
+        value: auto
+      - key: GEMINI_API_KEY
+        sync: false
+      - key: DATA_DIR
+        value: /data
+    disk:
+      name: crowdvision-data
+      mountPath: /data
+      sizeGB: 10

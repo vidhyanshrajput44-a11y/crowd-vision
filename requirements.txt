@@ -1,0 +1,3 @@
+# CrowdVision Platform - Unified Python Requirements
+-r backend/requirements.txt
+-r ai_agent/requirements.txt
