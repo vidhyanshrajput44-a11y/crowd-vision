@@ -106,7 +106,6 @@ desktop.ini
 
 # ──── Scratch & Temporary Disassembly Files ────
 scratch_*
-package-lock.json
 backend/scripts/pyc_dumps/
 backend/scripts/*_disasm.txt
 backend/scripts/schemas_extracted.txt
