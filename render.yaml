@@ -1,15 +1,19 @@
-# Render Blueprint Specification for CROWD VISION Platform
-# Deploy directly from Render Dashboard -> Blueprints -> Connect Repository
+# Render Blueprint Specification for CrowdVision Platform
+# Automatically provisions both the Backend Web Service and Frontend Static Site
 version: "1"
 
 services:
-  # Primary Unified Full-Stack Web Service (FastAPI + React SPA + OpenCV CV Pipeline)
+  # ─────────────────────────────────────────────────────────────
+  # 1. Backend Web Service (FastAPI REST API + WebSocket Engine)
+  # ─────────────────────────────────────────────────────────────
   - type: web
-    name: crowdvision
-    runtime: docker
-    plan: starter
+    name: crowdvision-api
+    runtime: python
+    plan: free
     region: oregon
-    dockerfilePath: ./Dockerfile
+    rootDir: backend
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT
     healthCheckPath: /api/health
     envVars:
       - key: APP_ENV
@@ -22,9 +26,24 @@ services:
         value: auto
       - key: GEMINI_API_KEY
         sync: false
-      - key: DATA_DIR
-        value: /data
-    disk:
-      name: crowdvision-data
-      mountPath: /data
-      sizeGB: 10
+
+  # ─────────────────────────────────────────────────────────────
+  # 2. Frontend Static Site (React 19 + TypeScript + Vite)
+  # ─────────────────────────────────────────────────────────────
+  - type: static
+    name: crowdvision-app
+    plan: free
+    region: oregon
+    rootDir: frontend
+    buildCommand: npm install && npm run build
+    staticPublishPath: dist
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html
+    envVars:
+      - key: VITE_API_BASE_URL
+        fromService:
+          type: web
+          name: crowdvision-api
+          property: host
