@@ -26,7 +26,7 @@ passlib[bcrypt]>=1.7.4
 python-dotenv>=1.0.1
 orjson>=3.10.0
 tenacity>=9.0.0
-python-dateutil>=2.9.0
+python-dateutil>=4.0.0
 
 # Monitoring
 structlog>=24.4.0
