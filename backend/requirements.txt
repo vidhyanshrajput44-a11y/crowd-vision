@@ -23,7 +23,7 @@ passlib[bcrypt]>=1.7.4
 
 # Networking & Utilities
 httpx>=0.28.0
-python-dotenv>=1.0.1
+python-dotenv>=1.2.4
 structlog>=24.4.0
 
 # Testing & Quality
