@@ -221,18 +221,36 @@ class PersonDetector:
 
         # Robust OpenCV fallback (HOG + background subtraction)
         self.backend_name = "opencv_hog_motion_fallback"
-        self._hog = cv2.HOGDescriptor()
-        self._hog.setSVMDetector(cv2.HOGDescriptor_getDefaultPeopleDetector())
-        self._bg_subtractor = cv2.createBackgroundSubtractorMOG2(
-            history=300, varThreshold=25, detectShadows=True
-        )
+        if hasattr(cv2, "HOGDescriptor"):
+            try:
+                self._hog = cv2.HOGDescriptor()
+                self._hog.setSVMDetector(cv2.HOGDescriptor_getDefaultPeopleDetector())
+            except Exception as e:
+                logger.warning("Could not initialize HOGDescriptor", error=str(e))
+                self._hog = None
+        else:
+            self._hog = None
+
+        if hasattr(cv2, "createBackgroundSubtractorMOG2"):
+            try:
+                self._bg_subtractor = cv2.createBackgroundSubtractorMOG2(
+                    history=300, varThreshold=25, detectShadows=True
+                )
+            except Exception as e:
+                logger.warning("Could not initialize background subtractor", error=str(e))
+                self._bg_subtractor = None
+        else:
+            self._bg_subtractor = None
         logger.info("Using robust OpenCV fallback person detector", backend=self.backend_name)
 
     def reset_temporal_state(self) -> None:
-        if self._bg_subtractor is not None:
-            self._bg_subtractor = cv2.createBackgroundSubtractorMOG2(
-                history=300, varThreshold=25, detectShadows=True
-            )
+        if self._bg_subtractor is not None and hasattr(cv2, "createBackgroundSubtractorMOG2"):
+            try:
+                self._bg_subtractor = cv2.createBackgroundSubtractorMOG2(
+                    history=300, varThreshold=25, detectShadows=True
+                )
+            except Exception:
+                pass
 
     def detect(
         self, frame: np.ndarray, perspective: str = "FIXED_CCTV"
@@ -348,25 +366,32 @@ class PersonDetector:
         h, w = frame.shape[:2]
         dets: list[Detection] = []
 
-        # 1. HOG detector
-        rects, weights = self._hog.detectMultiScale(
-            frame, winStride=(8, 8), padding=(8, 8), scale=1.05
-        )
-        for (rx, ry, rw, rh), weight in zip(rects, weights):
-            conf = min(0.95, max(0.40, float(weight) * 0.4 + 0.5))
-            if conf >= self.confidence_threshold:
-                dets.append(
-                    Detection(
-                        bbox=(float(rx), float(ry), float(rx + rw), float(ry + rh)),
-                        confidence=conf,
-                    )
+        # 1. HOG detector (if available)
+        if self._hog is not None:
+            try:
+                rects, weights = self._hog.detectMultiScale(
+                    frame, winStride=(8, 8), padding=(8, 8), scale=1.05
                 )
+                for (rx, ry, rw, rh), weight in zip(rects, weights):
+                    conf = min(0.95, max(0.40, float(weight) * 0.4 + 0.5))
+                    if conf >= self.confidence_threshold:
+                        dets.append(
+                            Detection(
+                                bbox=(float(rx), float(ry), float(rx + rw), float(ry + rh)),
+                                confidence=conf,
+                            )
+                        )
+            except Exception as e:
+                logger.warning("HOG detection failed", error=str(e))
 
         # 2. Motion / Background subtraction blobs
-        fg_mask = self._bg_subtractor.apply(frame)
-        kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (3, 3))
-        fg_clean = cv2.morphologyEx(fg_mask, cv2.MORPH_OPEN, kernel)
-        contours, _ = cv2.findContours(fg_clean, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+        if self._bg_subtractor is not None:
+            fg_mask = self._bg_subtractor.apply(frame)
+            kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (3, 3))
+            fg_clean = cv2.morphologyEx(fg_mask, cv2.MORPH_OPEN, kernel)
+            contours, _ = cv2.findContours(fg_clean, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+        else:
+            contours = []
 
         for c in contours:
             area = cv2.contourArea(c)
